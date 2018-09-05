@@ -42,6 +42,9 @@ namespace VAM_Utils
 
         public ShortcutPlugin()
         {
+            // Create the UserData folder if it doesn't exist
+            System.IO.Directory.CreateDirectory(Path.Combine(System.Environment.CurrentDirectory, "UserData"));
+
             const string invalidPresetKey = "";
             const float invalidPresetVal = -1000f;
             const int maxPresets = 100;
