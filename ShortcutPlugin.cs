@@ -24,6 +24,8 @@ namespace VAM_Utils
 
         private float _shiftMultiplier;
 
+        private bool _swapTimeAndAnim;
+
         public string Name
         {
             get
@@ -57,8 +59,9 @@ namespace VAM_Utils
             _animationSpeedStep =   ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedStepSize", 0.05f, true);
             _animationSpeedMin =    ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedMin", -1.0f, true);
             _animationSpeedMax =    ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedMax", 5.0f, true);
-
             _shiftMultiplier = ModPrefs.GetFloat("ShortcutPluginVars", "ShiftKeyMultiplier", 5.0f, true);
+
+            _swapTimeAndAnim = false;
 
             // Put some sample presets in the INI
             ModPrefs.GetFloat("ShortcutPluginVars", "TimeScalePreset0", 1.0f, true);
@@ -99,11 +102,29 @@ namespace VAM_Utils
                 },
                 {
                     ModPrefs.GetString("ShortcutPluginKeys", "IncTimeScale", "l", true).ToLower(),
-                    () => ChangeTimeScale( _timeScaleStep )
+                    () => {
+                        if( _swapTimeAndAnim )
+                        {
+                            ChangeAnimationSpeed( _animationSpeedStep );
+                        }
+                        else
+                        {
+                            ChangeTimeScale( _timeScaleStep );
+                        }
+                    }
                 },
                 {
                     ModPrefs.GetString("ShortcutPluginKeys", "DecTimeScale", "k", true).ToLower(),
-                    () => ChangeTimeScale( -_timeScaleStep )
+                    () => {
+                        if( _swapTimeAndAnim )
+                        {
+                            ChangeAnimationSpeed( -_animationSpeedStep );
+                        }
+                        else
+                        {
+                            ChangeTimeScale( -_timeScaleStep );
+                        }
+                    }
                 },
                 {
                     ModPrefs.GetString("ShortcutPluginKeys", "TogglePause", "j", true).ToLower(),
@@ -111,12 +132,38 @@ namespace VAM_Utils
                 },
                 {
                     ModPrefs.GetString("ShortcutPluginKeys", "IncAnimationSpeed", "7", true).ToLower(),
-                    () => ChangeAnimationSpeed( _animationSpeedStep )
+                    () => {
+                        if( _swapTimeAndAnim )
+                        {
+                            ChangeTimeScale( _timeScaleStep );
+                        }
+                        else
+                        {
+                            ChangeAnimationSpeed( _animationSpeedStep );
+                        }
+                    }
                 },
                 {
                     ModPrefs.GetString("ShortcutPluginKeys", "DecAnimationSpeed", "6", true).ToLower(),
-                    () => ChangeAnimationSpeed( -_animationSpeedStep )
+                    () => {
+                        if( _swapTimeAndAnim )
+                        {
+                            ChangeTimeScale( -_timeScaleStep );
+                        }
+                        else
+                        {
+                            ChangeAnimationSpeed( -_animationSpeedStep );
+                        }
+                    }
                 },
+                {
+                    ModPrefs.GetString("ShortcutPluginKeys", "SwapTimeAndAnim", "5", true).ToLower(),
+                    () =>
+                    {
+                        _swapTimeAndAnim = !_swapTimeAndAnim;
+                    }
+                },
+
             };
 
             // Add presets
@@ -124,24 +171,53 @@ namespace VAM_Utils
             {
                 var tsPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetTimeScalePreset" + i.ToString(), invalidPresetKey, false);
                 var tsPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "TimeScalePreset" + i.ToString(), invalidPresetVal, false);
-                if( tsPresetKey != invalidPresetKey && tsPresetVal != invalidPresetVal )
-                {
-                    _shortcuts.Add(tsPresetKey, () => SetTimeScale(tsPresetVal) );
-                }
+                bool tsSet = tsPresetKey != invalidPresetKey && tsPresetVal != invalidPresetVal;
+
+                var asPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetAnimationSpeedPreset" + i.ToString(), invalidPresetKey, false);
+                var asPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedPreset" + i.ToString(), invalidPresetVal, false);
+                bool asSet = asPresetKey != invalidPresetKey && asPresetVal != invalidPresetVal;
 
                 var wsPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetWorldScalePreset" + i.ToString(), invalidPresetKey, false);
                 var wsPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "WorldScalePreset" + i.ToString(), invalidPresetVal, false);
+
+
+                if( tsSet && !asSet )
+                {
+                    _shortcuts.Add(tsPresetKey, () => SetTimeScale(tsPresetVal));
+                }
+                if( asSet && !tsSet )
+                {
+                    _shortcuts.Add(asPresetKey, () => SetAnimationSpeed(asPresetVal));
+                }
+                if (tsSet && asSet)
+                {
+                    _shortcuts.Add(asPresetKey, () => {
+                        if (_swapTimeAndAnim)
+                        {
+                            SetTimeScale(tsPresetVal);
+                        }
+                        else
+                        {
+                            SetAnimationSpeed(asPresetVal);
+                        }
+                    } );
+
+                    _shortcuts.Add(tsPresetKey, () => {
+                        if (_swapTimeAndAnim)
+                        {
+                            SetAnimationSpeed(asPresetVal);
+                        }
+                        else
+                        {
+                            SetTimeScale(tsPresetVal);
+                        }
+                    });
+                }
                 if (wsPresetKey != invalidPresetKey && wsPresetVal != invalidPresetVal)
                 {
                     _shortcuts.Add(wsPresetKey, () => SetWorldScale(wsPresetVal));
                 }
 
-                var asPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetAnimationSpeedPreset" + i.ToString(), invalidPresetKey, false);
-                var asPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedPreset" + i.ToString(), invalidPresetVal, false);
-                if (asPresetKey != invalidPresetKey && asPresetVal != invalidPresetVal)
-                {
-                    _shortcuts.Add(asPresetKey, () => SetAnimationSpeed(asPresetVal));
-                }
             }
         }
 
