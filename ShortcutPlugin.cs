@@ -44,21 +44,59 @@ namespace VAM_Utils
 
         public ShortcutPlugin()
         {
+            reloadIni();
+        }
+
+        public void OnApplicationQuit()
+        {
+        }
+
+        public void OnApplicationStart()
+        {
+        }
+
+        public void OnFixedUpdate()
+        {
+        }
+
+        public void OnLevelWasInitialized(int level)
+        {
+        }
+
+        public void OnLevelWasLoaded(int level)
+        {
+        }
+
+
+        public void OnUpdate()
+        {
+            foreach (KeyValuePair<string, ActionFunction> shortcut in _shortcuts)
+            {
+                if(shortcut.Key.Length > 0 && Input.GetKeyDown(shortcut.Key))
+                {
+                    shortcut.Value();
+                }
+            }
+        }
+
+
+        private void reloadIni()
+        {
             // Create the UserData folder if it doesn't exist
             System.IO.Directory.CreateDirectory(Path.Combine(System.Environment.CurrentDirectory, "UserData"));
 
             const string invalidPresetKey = "";
             const float invalidPresetVal = -1000f;
             const int maxPresets = 100;
-            _worldScaleStep =       ModPrefs.GetFloat("ShortcutPluginVars", "WorldScaleStepSize", 0.01f, true);
-            _worldScaleMin =        ModPrefs.GetFloat("ShortcutPluginVars", "WorldScaleMin", 0.01f, true);
-            _worldScaleMax =        ModPrefs.GetFloat("ShortcutPluginVars", "WorldScaleMax", 10.0f, true);
-            _timeScaleStep =        ModPrefs.GetFloat("ShortcutPluginVars", "TimeScaleStepSize", 0.01f, true);
-            _timeScaleMin =         ModPrefs.GetFloat("ShortcutPluginVars", "TimeScaleMin", 0.1f, true);
-            _timeScaleMax =         ModPrefs.GetFloat("ShortcutPluginVars", "TimeScaleMax", 1.0f, true);
-            _animationSpeedStep =   ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedStepSize", 0.05f, true);
-            _animationSpeedMin =    ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedMin", -1.0f, true);
-            _animationSpeedMax =    ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedMax", 5.0f, true);
+            _worldScaleStep = ModPrefs.GetFloat("ShortcutPluginVars", "WorldScaleStepSize", 0.01f, true);
+            _worldScaleMin = ModPrefs.GetFloat("ShortcutPluginVars", "WorldScaleMin", 0.01f, true);
+            _worldScaleMax = ModPrefs.GetFloat("ShortcutPluginVars", "WorldScaleMax", 10.0f, true);
+            _timeScaleStep = ModPrefs.GetFloat("ShortcutPluginVars", "TimeScaleStepSize", 0.01f, true);
+            _timeScaleMin = ModPrefs.GetFloat("ShortcutPluginVars", "TimeScaleMin", 0.1f, true);
+            _timeScaleMax = ModPrefs.GetFloat("ShortcutPluginVars", "TimeScaleMax", 1.0f, true);
+            _animationSpeedStep = ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedStepSize", 0.05f, true);
+            _animationSpeedMin = ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedMin", -1.0f, true);
+            _animationSpeedMax = ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedMax", 5.0f, true);
             _shiftMultiplier = ModPrefs.GetFloat("ShortcutPluginVars", "ShiftKeyMultiplier", 5.0f, true);
 
             _swapTimeAndAnim = false;
@@ -163,29 +201,33 @@ namespace VAM_Utils
                         _swapTimeAndAnim = !_swapTimeAndAnim;
                     }
                 },
+                {
+                    ModPrefs.GetString("ShortcutPluginKeys", "ReloadIni", "q", true).ToLower(),
+                    () => reloadIni()
+                },
 
             };
 
             // Add presets
-            for( int i = 0; i < maxPresets; ++i )
+            for (int i = 0; i < maxPresets; ++i)
             {
-                var tsPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetTimeScalePreset" + i.ToString(), invalidPresetKey, false);
+                var tsPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetTimeScalePreset" + i.ToString(), invalidPresetKey, false).ToLower();
                 var tsPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "TimeScalePreset" + i.ToString(), invalidPresetVal, false);
                 bool tsSet = tsPresetKey != invalidPresetKey && tsPresetVal != invalidPresetVal;
 
-                var asPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetAnimationSpeedPreset" + i.ToString(), invalidPresetKey, false);
+                var asPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetAnimationSpeedPreset" + i.ToString(), invalidPresetKey, false).ToLower();
                 var asPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "AnimationSpeedPreset" + i.ToString(), invalidPresetVal, false);
                 bool asSet = asPresetKey != invalidPresetKey && asPresetVal != invalidPresetVal;
 
-                var wsPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetWorldScalePreset" + i.ToString(), invalidPresetKey, false);
+                var wsPresetKey = ModPrefs.GetString("ShortcutPluginKeys", "SetWorldScalePreset" + i.ToString(), invalidPresetKey, false).ToLower();
                 var wsPresetVal = ModPrefs.GetFloat("ShortcutPluginVars", "WorldScalePreset" + i.ToString(), invalidPresetVal, false);
 
 
-                if( tsSet && !asSet )
+                if (tsSet && !asSet)
                 {
                     _shortcuts.Add(tsPresetKey, () => SetTimeScale(tsPresetVal));
                 }
-                if( asSet && !tsSet )
+                if (asSet && !tsSet)
                 {
                     _shortcuts.Add(asPresetKey, () => SetAnimationSpeed(asPresetVal));
                 }
@@ -200,7 +242,7 @@ namespace VAM_Utils
                         {
                             SetAnimationSpeed(asPresetVal);
                         }
-                    } );
+                    });
 
                     _shortcuts.Add(tsPresetKey, () => {
                         if (_swapTimeAndAnim)
@@ -220,39 +262,6 @@ namespace VAM_Utils
 
             }
         }
-
-        public void OnApplicationQuit()
-        {
-        }
-
-        public void OnApplicationStart()
-        {
-        }
-
-        public void OnFixedUpdate()
-        {
-        }
-
-        public void OnLevelWasInitialized(int level)
-        {
-        }
-
-        public void OnLevelWasLoaded(int level)
-        {
-        }
-
-
-        public void OnUpdate()
-        {
-            foreach (KeyValuePair<string, ActionFunction> shortcut in _shortcuts)
-            {
-                if(shortcut.Key.Length > 0 && Input.GetKeyDown(shortcut.Key))
-                {
-                    shortcut.Value();
-                }
-            }
-        }
-
 
         private void ChangeWorldScale( float aDelta )
         {
