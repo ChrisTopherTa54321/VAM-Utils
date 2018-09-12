@@ -60,6 +60,14 @@ namespace VAM_ImageGrabber
             });
         }
 
+        private void HandleEcho(JSONNode aJsonNode)
+        {
+            this.Enqueue(delegate
+            {
+                this._pipeServer.Write(aJsonNode);
+            });
+        }
+
         private void WorkerThread()
         {
             while (!this._exitThread)
@@ -80,6 +88,7 @@ namespace VAM_ImageGrabber
         {
             this._pipeServer = new PipeServer("foto2vamPipe");
             this._pipeServer.RegisterHandler("screenshot", new Action<JSONNode>(this.HandleTakeScreenshot));
+            this._pipeServer.RegisterHandler("echo", new Action<JSONNode>(this.HandleEcho));
             this._imageMaker = new GameObject().AddComponent<ImageMaker>();
             this._thread = new Thread(new ThreadStart(this.WorkerThread));
             this._queue = new Queue<Action>();

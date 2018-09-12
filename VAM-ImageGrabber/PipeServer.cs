@@ -8,6 +8,8 @@ namespace VAM_ImageGrabber
 {
     public class PipeServer : IDisposable
     {
+        private string _eom = "<EOM>";
+
         public PipeServer( string aPipeName )
         {
             this._pipeName = aPipeName;
@@ -58,12 +60,12 @@ namespace VAM_ImageGrabber
                 return;
             }
             this._recvdString += Encoding.Default.GetString(this._readBuffer, 0, num);
-            string text = "<EOM>";
+
             int num2;
-            while ((num2 = this._recvdString.IndexOf(text)) >= 0)
+            while ((num2 = this._recvdString.IndexOf(_eom)) >= 0)
             {
                 string aJSON = this._recvdString.Substring(0, num2);
-                this._recvdString = this._recvdString.Substring(num2 + text.Length);
+                this._recvdString = this._recvdString.Substring(num2 + _eom.Length);
                 JSONNode aMsg = JSON.Parse(aJSON);
                 this.HandleMessage(aMsg);
             }
@@ -111,11 +113,21 @@ namespace VAM_ImageGrabber
             {
                 this._handlers[value](aMsg);
             }
+            else
+            {
+                SuperController.LogError(string.Format("Unknown pipe command: {0}", value) );
+            }
         }
 
         public void RegisterHandler(string aCmd, Action<JSONNode> aHandler)
         {
             this._handlers[aCmd] = aHandler;
+        }
+
+        public void Write( JSONNode aInfo )
+        {
+            byte[] bytesToSend = Encoding.Default.GetBytes(aInfo.ToString() + _eom );
+            this._pipeServer.Write(bytesToSend, 0, bytesToSend.Length );
         }
 
         private AsyncCallback _connectionCallback;
