@@ -32,7 +32,7 @@ namespace VAM_ImageGrabber
             }
         }
 
-        public void TakeScreenshot(string aName, string aJsonPath, string aOutputPath, List<int> aAngles, int aWidth, int aHeight)
+        public void TakeScreenshot(string aName, string aJsonPath, string aOutputPath, List<float> aAngles, int aWidth, int aHeight)
         {
             this.pendingAction = delegate ()
             {
@@ -60,7 +60,7 @@ namespace VAM_ImageGrabber
             this._event.WaitOne();
         }
 
-        private IEnumerator TakeScreenshotCo(Atom atom, string aOutputPath, List<int> aAngles, int aWidth, int aHeight)
+        private IEnumerator TakeScreenshotCo(Atom atom, string aOutputPath, List<float> aAngles, int aWidth, int aHeight)
         {
             List<ScreenshotCamera> cameras = new List<ScreenshotCamera>();
             Component head = null;

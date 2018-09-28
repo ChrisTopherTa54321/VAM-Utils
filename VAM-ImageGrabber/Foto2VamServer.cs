@@ -48,11 +48,11 @@ namespace VAM_ImageGrabber
             string value2 = aJsonNode["outputPath"].Value;
             int asInt = aJsonNode["dimensions"][0].AsInt;
             int asInt2 = aJsonNode["dimensions"][1].AsInt;
-            List<int> list = new List<int>();
+            List<float> list = new List<float>();
             foreach (object obj in aJsonNode["angles"].AsArray)
             {
                 JSONNode jsonnode = (JSONNode)obj;
-                list.Add(jsonnode.AsInt);
+                list.Add(jsonnode.AsFloat);
             }
             this.Enqueue(delegate
             {
